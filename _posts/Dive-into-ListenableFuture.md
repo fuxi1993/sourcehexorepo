@@ -110,8 +110,15 @@ public static <V> void addCallback(final ListenableFuture<V> future,
 ```
 推荐使用第二种方法，因为第二种方法可以直接得到Future的返回值，或者处理错误情况。本质上第二种方法是通过调动第一种方法实现的，做了进一步的封装。
 
-## 3.what's more
-另外ListenableFuture还有其他几种内置实现：
+## 3.ListenableFuture的实现之一：ListenableFutureTask
+ListenableFutureTask的实现逻辑如下，细节可见参考文档1
+![ListenableFutureTask类图](/image/ListenableFutureTask.png)
 
-1. SettableFuture：不需要实现一个方法来计算返回值，而只需要返回一个固定值来做为返回值，可以通过程序设置此Future的返回值或者异常信息
-2. heckedFuture： 这是一个继承自ListenableFuture接口，他提供了checkedGet()方法，此方法在Future执行发生异常时，可以抛出指定类型的异常。
+## 4.总结&思考
+
+其实我在读到使用推荐的方法二来进行添加回调的源代码时，就有一个疑问，即addCallback()方法只是在里面定义了一个Runnable来封装了回调的几个方法（成功，失败等），但是并没有有线程来执行这个Runnable，后面我读到 ListenableFutureTask 时，发现这个方法中的addListener方法，以及done()方法使用代理ExecutorList来通过我们生成的线程池运行了Runnable，就完整明白了其中的逻辑。
+
+通过这次的ListenableFuture的分析学习，更加深刻的理解了Java中接口的意义，其实际上是约束了一组行为规范，但是并不具体实现，其可以认为是一个框架制定者，但是并不限制具体的实现。但是我们在实际的应用程序中，使用和接触的是实际的类对象实例，这个类如果实现了接口，就一定会实现这组行为规范，进行落地，让它真正的work起来。有时候在阅读代码或者编写代码时，就会容易犯我前面的糊涂，即担心Futures.addCallback()中的Runnable没人做，实际上我们写的时候是面向接口编程，但是在用的时候，是使用的实际的类，这些类就会完成实际的工作。这种思维无论是在阅读源码还是编写Java代码时，都是非常有用的。
+
+## 5.参考文档
+1. [《线程池系列六》-Guava ListenableFutureTask](https://www.jianshu.com/p/a4b4159163fd)
